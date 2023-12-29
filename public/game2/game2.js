@@ -10,6 +10,7 @@ let gate2bg;
 let instruction;
 let menu;
 let allDish;
+let player1;
 
 function preload() {
   gate2 = loadImage("../assets/Gate2/背景/Gate2背景(+物件).png");
@@ -17,6 +18,7 @@ function preload() {
   instruction = loadImage("../assets/Gate2/遊戲說明/資產 2.png");
   menu = loadImage("../assets/Gate2/菜單/菜單按鈕.png");
   allDish = loadImage("../assets/Gate2/菜單/菜單選取.png");
+  player1 = loadImage("../assets/主角/玩家狀態二.png");
 }
 
 function setup() {
@@ -28,60 +30,138 @@ function setup() {
 function draw() {
   //螢幕場景切換
   if (screen == 0) {
-    chooseDish();
-    // startScreen();
+    startScreen();
   } else if (screen == 1) {
     intro();
   } else if (screen == 2) {
     chooseDish();
   }
 }
+//---------------------- 畫面內容 function ---------------------------------------------------------------
 
-//Step 0 遊戲開始前 startScreen()
-let introText = [
-  "「我想要到台灣努力工作，賺錢以後要幫忙家裡。」",
-  "看著每個月的薪資都拿去還高額的仲介費債務與服務費抽成",
-  "薪水還需要寄回家鄉",
-  "因此即使每天努力工作仍賺不了錢",
-  "為什麼想在台灣過生活這麼難呢？",
-];
+//----------------------Step 0 遊戲開始前 startScreen() ----------------------------------------------
+
+//文字動畫使用
+let textSpeed = 5; // 打字速度
+let textIndex = 0; // 文字索引
+let lineIndex = 0; // 行索引
+let displayText = ""; // 要顯示的文字
+let textSpacing = 30; // 字的行句
+let allTextDisplayed = false; // 是否所有文字都已經打印完畢
 
 function startScreen() {
-  //放圖片放文字
-  background(gate2bg);
+  let introText = [
+    "「我想要到台灣努力工作，賺錢以後要幫忙家裡。」",
+    "看著每個月的薪資都拿去還高額的仲介費債務與服務費抽成",
+    "薪水還需要寄回家鄉",
+    "因此即使每天努力工作仍賺不了錢",
+    "為什麼想在台灣過生活這麼難呢？",
+  ];
 
+  // background(gate2bg);
+
+  imageMode(CENTER);
+
+  //背景圖
+  image(
+    gate2bg,
+    windowWidth / 2,
+    windowHeight / 2,
+    windowWidth * 1.06,
+    gate2bg.height / 5
+  );
+
+  //Game2 標題
   textAlign(CENTER);
   textStyle(BOLD);
-  textSize(25);
-  text("GAME 2", width / 2, height / 2 - 150);
+  textSize(32);
+  stroke("white");
+  text("GAME 2", windowWidth / 2, windowHeight / 2 - 180);
 
+  //印出故事文字動畫
   textStyle(NORMAL);
-  textSize(16);
-  text(introText[0], width / 2, height / 2 - 110);
-
-  text(introText[1], width / 2, height / 2 - 80);
-  text(introText[2], width / 2, height / 2 - 50);
-
-  text(introText[3], width / 2, height / 2 - 20);
-  text(introText[4], width / 2, height / 2 + 10);
-
-  fill("white");
   noStroke();
-  rect(windowWidth / 2 - 40, height / 2 + 62, textWidth("START") + 40, 30, 10);
+  textSize(16);
 
-  textStyle(BOLD);
-  textSize(20);
-  fill("black");
-  // noFill();
-  // stroke("black");
-  text("START", width / 2, height / 2 + 70);
+  // 顯示已打完的文字
+  for (let i = 0; i < introText.length; i++) {
+    if (i < lineIndex) {
+      text(
+        introText[i],
+        windowWidth / 2,
+        windowHeight / 2 - 120 + i * textSpacing
+      );
+    }
+  }
+
+  // 逐字打字
+  if (!allTextDisplayed) {
+    displayText = introText[lineIndex].substring(0, textIndex);
+    text(
+      displayText,
+      windowWidth / 2,
+      windowHeight / 2 - 120 + lineIndex * textSpacing
+    );
+
+    // 控制打字速度
+    if (
+      frameCount % textSpeed === 0 &&
+      textIndex < introText[lineIndex].length
+    ) {
+      textIndex++;
+    } else if (textIndex >= introText[lineIndex].length) {
+      lineIndex++; // 移至下一行
+      textIndex = 0; // 重置字元索引
+
+      if (lineIndex === introText.length) {
+        allTextDisplayed = true; // 所有文字都已打印完畢
+      }
+    }
+  }
+
+  if (allTextDisplayed === true) {
+    //畫出玩家
+    image(
+      player1,
+      windowWidth / 2,
+      windowHeight / 2 + 150,
+      player1.width / 5,
+      player1.height / 5
+    );
+
+    //開始賺錢文字、框
+    fill(0, 0, 0, 180);
+    noStroke();
+    rect(
+      windowWidth / 2 - 55,
+      windowHeight / 2 + 150,
+      textWidth("START") + 70,
+      50,
+      30
+    );
+
+    fill("white");
+    textSize(32);
+    textAlign(CENTER, CENTER);
+    text("START", width / 2, height / 2 + 180);
+  }
 
   reset();
 }
 
-//Step1 遊戲說明 intro()
+//----------------------Step0 End ----------------------------------------------------------
+
+//----------------------Step1 遊戲說明 intro() ----------------------------------------------
 function intro() {
-  background(gate2bg);
+  // background(gate2bg);
+  //背景圖
+  image(
+    gate2bg,
+    windowWidth / 2,
+    windowHeight / 2,
+    windowWidth * 1.06,
+    gate2bg.height / 5
+  );
   imageMode(CENTER);
   image(
     instruction,
@@ -92,19 +172,17 @@ function intro() {
   );
 }
 
-//Step2 餐點選擇 chooseDish()
-//TODO 各個餐點選擇按鈕
-let dish1 = 0;
-let buttonInc, buttonDec;
-let buttonWidth = 30;
-let buttonHeight = 30;
+//----------------------Step1 End ----------------------------------------------------------
+
+//----------------------Step2 餐點選擇 chooseDish()------------------------------------------
 
 //按鈕變數
-let buttons = []; // 存放按鈕的陣列
+let decreaseButtons = []; // 存放減號按鈕的陣列
+let increaseButtons = []; // 存放加號按鈕的陣列
 let buttonCount = 4; // 按鈕數量
-// let startX = windowWidth / 2 - 245; // 第一個按鈕的起始 X 座標
-// let startY = windowHeight / 2 + 80; // 按鈕的 Y 座標
-let buttonSpacing = 50; // 按鈕間距
+
+let buttonSpacing = 188; // 按鈕間距
+let totalCost; //總費用加總
 
 // 每個按鈕的餐點價格和數量的陣列
 let dishInfo = [
@@ -114,13 +192,11 @@ let dishInfo = [
   { price: 50, count: 0 },
 ];
 
-// let totalCost = 0;
-let totalCost = dishInfo.reduce((acc, val) => acc + val.count * val.price, 0);
-
 function chooseDish() {
   // background(gate2bg);
   imageMode(CENTER);
 
+  //背景圖
   image(
     gate2bg,
     windowWidth / 2,
@@ -129,6 +205,7 @@ function chooseDish() {
     gate2bg.height / 5
   );
 
+  //菜單標題
   image(
     menu,
     windowWidth / 2,
@@ -137,6 +214,7 @@ function chooseDish() {
     menu.height / 5
   );
 
+  //菜單選單
   image(
     allDish,
     windowWidth / 2,
@@ -145,43 +223,48 @@ function chooseDish() {
     allDish.height / 5.5
   );
 
-  //劃出按鈕
+  //畫出四組按鈕
   for (let i = 0; i < buttonCount; i++) {
-    buttons.push(createButton("+")); // 創建加號按鈕
-    buttons[i].position(
-      windowWidth / 2 - 245 + i * buttonSpacing,
-      windowHeight / 2 + 80
-    ); // 設置按鈕位置
-    buttons[i].size(30, 30); // 設置按鈕大小
-    buttons[i].mousePressed(() => incrementValue(i)); // 按鈕按下時的操作
+    // 創建減號按鈕
+    decreaseButtons.push(createButton("-"));
+    decreaseButtons[i].position(
+      windowWidth / 2 - 340 + i * buttonSpacing,
+      windowHeight / 2 + 70
+    );
+    decreaseButtons[i].size(30, 30);
+    decreaseButtons[i].mousePressed(() => decreaseValue(i));
   }
 
-  // 創建增加數值的按鈕
-  buttonInc = createButton("+");
-  buttonInc.position(windowWidth / 2 - 245, windowHeight / 2 + 80);
-  buttonInc.size(buttonWidth, buttonHeight);
-  buttonInc.mousePressed(incrementValue);
+  for (let i = 0; i < buttonCount; i++) {
+    // 創建加號按鈕
+    increaseButtons.push(createButton("+"));
+    increaseButtons[i].position(
+      windowWidth / 2 - 260 + i * buttonSpacing,
+      windowHeight / 2 + 70
+    );
+    increaseButtons[i].size(30, 30);
+    increaseButtons[i].mousePressed(() => increaseValue(i));
+  }
 
-  // 創建減少數值的按鈕
-  buttonDec = createButton("-");
-  buttonDec.position(windowWidth / 2 - 345, windowHeight / 2 + 80);
-  buttonDec.size(buttonWidth, buttonHeight);
-  buttonDec.mousePressed(decrementValue);
-
-  // 顯示點餐量
+  // 顯示每個按鈕對應的餐點數量
   textSize(28);
   textAlign(CENTER, CENTER);
-  text(count, windowWidth / 2 - 280, windowHeight / 2 + 100);
 
-  // 顯示總額
-  // 計算總費用並顯示
+  for (let i = 0; i < buttonCount; i++) {
+    text(
+      ` ${dishInfo[i].count}`,
+      windowWidth / 2 - 290 + i * buttonSpacing,
+      windowHeight / 2 + 88
+    );
+  }
 
-  text(`總費用: ${totalCost}元`, width / 2, height / 2 + 140);
-
+  // 計算伙食費並顯示
+  totalCost = dishInfo.reduce((acc, val) => acc + val.count * val.price, 0); //reduce 讓陣列每個數值做相同動作
   textSize(24);
   textAlign(CENTER, CENTER);
-  text("伙食費 " + totalCost + " 元", width / 2, height / 2 + 140);
+  text(`伙食費: ${totalCost}元`, width / 2, height / 2 + 140);
 
+  //開始賺錢文字、框
   fill(0, 0, 0, 180);
   noStroke();
   rect(
@@ -192,26 +275,28 @@ function chooseDish() {
     30
   );
 
-  // 顯示總額
   fill("white");
   textSize(32);
   textAlign(CENTER, CENTER);
   text("開始賺錢", width / 2, height / 2 + 220);
 }
 
-function incrementValue() {
+//增加對應餐點數
+function increaseValue(index) {
   dishInfo[index].count++;
-  // dish1++;
-  // totalCost = dish1 * 70;
 }
 
-function decrementValue() {
-  if (dish1 > 0) {
-    dish1--;
+//減少對應餐點數量
+function decreaseValue(index) {
+  if (dishInfo[index].count > 0) {
+    dishInfo[index].count--;
+  } else {
+    //讓餐點數量不會呈負數
+    dishInfo[index].count = 0;
   }
-
-  totalCost = dish1 * 70;
 }
+
+//----------------------Step2 End ----------------------------------------------------------
 
 function gameOn() {
   background(0);
@@ -245,11 +330,44 @@ function endScreen() {
   text("click to play again", width / 2, height / 2 + 40);
 }
 
+//點擊滑鼠進行畫面轉換
 function mousePressed() {
-  if (screen == 0) {
+  // Step0 開始進入遊戲的方框位置
+  let screen0StartX = windowWidth / 2 - 55;
+  let screen0StartY = windowHeight / 2 + 150;
+
+  //Step2 開始賺錢的方框位置
+  let screen2StartX = windowWidth / 2 - 80;
+  let screen2StartY = windowHeight / 2 + 192;
+
+  if (
+    //Step0 Game2 起始畫面
+    screen === 0 &&
+    mouseX > screen0StartX &&
+    mouseX < screen0StartX + textWidth("START") + 70 &&
+    mouseY > screen0StartY &&
+    mouseY < screen0StartY + 50
+  ) {
     screen = 1;
-  } else if (screen == 1) {
+  } else if (screen === 1) {
+    //Step1 遊戲說明畫面
     screen = 2;
+  } else if (
+    //Step2 選餐畫面開始，點選開始賺錢切畫面
+    screen === 2 &&
+    mouseX > screen2StartX &&
+    mouseX < screen2StartX + textWidth("開始賺錢") + 70 &&
+    mouseY > screen2StartY &&
+    mouseY < screen2StartY + 50
+  ) {
+    //選完餐點之後，隱藏按鈕，進入遊戲開始關卡
+    //切換畫面
+    screen = 0;
+    //隱藏按鈕
+    for (let i = 0; i < buttonCount; i++) {
+      increaseButtons[i].hide();
+      decreaseButtons[i].hide();
+    }
   }
 }
 
