@@ -1,4 +1,4 @@
-var screen = 0;
+let screen = 0;
 var y = -20;
 var x = 200;
 var speed = 2;
@@ -8,6 +8,7 @@ var score = 0;
 let gate2;
 let gate2bg;
 let instruction;
+let info;
 let menu;
 let allDish;
 let player1;
@@ -16,6 +17,7 @@ function preload() {
   gate2 = loadImage("../assets/Gate2/背景/Gate2背景(+物件).png");
   gate2bg = loadImage("../assets/Gate2/背景/背景藍灰漸層.png");
   instruction = loadImage("../assets/Gate2/遊戲說明/資產 2.png");
+  info = loadImage("../assets/Gate2/遊戲說明/遊戲說明.png");
   menu = loadImage("../assets/Gate2/菜單/菜單按鈕.png");
   allDish = loadImage("../assets/Gate2/菜單/菜單選取.png");
   player1 = loadImage("../assets/主角/玩家狀態二.png");
@@ -29,12 +31,16 @@ function setup() {
 
 function draw() {
   //螢幕場景切換
-  if (screen == 0) {
+  if (screen === 0) {
     startScreen();
-  } else if (screen == 1) {
+    // chooseDish();
+    // gameOn();
+  } else if (screen === 1) {
     intro();
-  } else if (screen == 2) {
+  } else if (screen === 2) {
     chooseDish();
+  } else if (screen === 3) {
+    gameOn();
   }
 }
 //---------------------- 畫面內容 function ---------------------------------------------------------------
@@ -48,6 +54,8 @@ let lineIndex = 0; // 行索引
 let displayText = ""; // 要顯示的文字
 let textSpacing = 30; // 字的行句
 let allTextDisplayed = false; // 是否所有文字都已經打印完畢
+
+let alphaValue = 0;
 
 function startScreen() {
   let introText = [
@@ -119,18 +127,19 @@ function startScreen() {
     }
   }
 
-  if (allTextDisplayed === true) {
-    //畫出玩家
-    image(
-      player1,
-      windowWidth / 2,
-      windowHeight / 2 + 150,
-      player1.width / 5,
-      player1.height / 5
-    );
+  //畫出玩家
+  image(
+    player1,
+    windowWidth / 2,
+    windowHeight / 2 + 150,
+    player1.width / 5,
+    player1.height / 5
+  );
 
+  //打完字後才出現 start
+  if (allTextDisplayed === true) {
     //開始賺錢文字、框
-    fill(0, 0, 0, 180);
+    fill(0, 0, 0, alphaValue);
     noStroke();
     rect(
       windowWidth / 2 - 55,
@@ -139,6 +148,10 @@ function startScreen() {
       50,
       30
     );
+    // 漸進增加透明度
+    if (alphaValue < 180) {
+      alphaValue += 5; // 調整此值以控制漸變速度
+    }
 
     fill("white");
     textSize(32);
@@ -154,6 +167,8 @@ function startScreen() {
 //----------------------Step1 遊戲說明 intro() ----------------------------------------------
 function intro() {
   // background(gate2bg);
+
+  imageMode(CENTER);
   //背景圖
   image(
     gate2bg,
@@ -162,7 +177,16 @@ function intro() {
     windowWidth * 1.06,
     gate2bg.height / 5
   );
-  imageMode(CENTER);
+
+  //畫出玩家
+  image(
+    player1,
+    windowWidth / 2 + 200,
+    windowHeight / 2 + 150,
+    player1.width / 5,
+    player1.height / 5
+  );
+
   image(
     instruction,
     windowWidth / 2,
@@ -170,6 +194,15 @@ function intro() {
     instruction.width / 5.5,
     instruction.height / 5.5
   );
+
+  fill(0, 0, 0, alphaValue);
+  textSize(22);
+  textAlign(CENTER, CENTER);
+  text("任意點擊繼續 >>>", width / 2 - 30, height / 2 + 200);
+  // 漸進增加透明度
+  if (alphaValue < 180) {
+    alphaValue += 0.5;
+  }
 }
 
 //----------------------Step1 End ----------------------------------------------------------
@@ -182,7 +215,7 @@ let increaseButtons = []; // 存放加號按鈕的陣列
 let buttonCount = 4; // 按鈕數量
 
 let buttonSpacing = 188; // 按鈕間距
-let totalCost; //總費用加總
+let totalCost; //總伙食費加總
 
 // 每個按鈕的餐點價格和數量的陣列
 let dishInfo = [
@@ -204,6 +237,9 @@ function chooseDish() {
     windowWidth * 1.06,
     gate2bg.height / 5
   );
+
+  //遊戲說明
+  image(info, 50, 50, info.width / 5, info.height / 5);
 
   //菜單標題
   image(
@@ -298,15 +334,29 @@ function decreaseValue(index) {
 
 //----------------------Step2 End ----------------------------------------------------------
 
+//----------------------Step3 遊戲開始 gameOn()------------------------------------------
+
 function gameOn() {
-  background(0);
-  text("score = " + score, 30, 20);
+  imageMode(CENTER);
+  //背景圖
+  image(
+    gate2,
+    windowWidth / 2,
+    windowHeight / 2,
+    windowWidth * 1.06,
+    gate2.height / 5
+  );
+
+  fill("white");
+  textSize(18);
+  text(`伙食費：${totalCost}`, 20, windowHeight / 2 + 100);
+  text(`目前薪資：`, 20, windowHeight / 2 + 130);
   ellipse(x, y, 20, 20);
   rectMode(CENTER);
   rect(mouseX, height - 10, 50, 30);
   y += speed;
   if (y > height) {
-    screen = 2;
+    screen = 0;
   }
   if (y > height - 10 && x > mouseX - 20 && x < mouseX + 20) {
     y = -20;
@@ -322,6 +372,8 @@ function pickRandom() {
   x = random(20, width - 20);
 }
 
+//----------------------Step3 End ----------------------------------------------------------
+
 function endScreen() {
   background(150);
   textAlign(CENTER);
@@ -332,6 +384,19 @@ function endScreen() {
 
 //點擊滑鼠進行畫面轉換
 function mousePressed() {
+  // 遊戲說明點擊
+  //TODO 點擊說明info小圖繪出現遊戲說明
+  // if (
+  //   screen === 2 &&
+  //   mouseX > 50 &&
+  //   mouseX < 50 + info.width / 5 &&
+  //   mouseY > 50 &&
+  //   mouseY < 50 + info.height / 5
+  // ) {
+  //   image(instruction, 100, 100, instruction.width / 5, instruction.height / 5);
+  // }
+  //
+
   // Step0 開始進入遊戲的方框位置
   let screen0StartX = windowWidth / 2 - 55;
   let screen0StartY = windowHeight / 2 + 150;
@@ -352,17 +417,23 @@ function mousePressed() {
   } else if (screen === 1) {
     //Step1 遊戲說明畫面
     screen = 2;
+    //TODO 出現按鈕
+    // for (let i = 0; i < buttonCount; i++) {
+    //   increaseButtons[i].show();
+    //   decreaseButtons[i].show();
+    // }
   } else if (
     //Step2 選餐畫面開始，點選開始賺錢切畫面
     screen === 2 &&
     mouseX > screen2StartX &&
     mouseX < screen2StartX + textWidth("開始賺錢") + 70 &&
     mouseY > screen2StartY &&
-    mouseY < screen2StartY + 50
+    mouseY < screen2StartY + 50 &&
+    totalCost > 0
   ) {
     //選完餐點之後，隱藏按鈕，進入遊戲開始關卡
     //切換畫面
-    screen = 0;
+    screen = 3;
     //隱藏按鈕
     for (let i = 0; i < buttonCount; i++) {
       increaseButtons[i].hide();
@@ -375,6 +446,7 @@ function reset() {
   score = 0;
   speed = 2;
   y = -20;
+  totalCost = 0;
 }
 
 //讓圖片符合螢幕尺寸
