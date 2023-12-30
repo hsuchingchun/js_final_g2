@@ -21,5 +21,5 @@
   玩家須在30秒內賺到符合所選伙食費，而可破關
 
 ### 參考程式碼
-[p5.js 接球小遊戲]([https://editor.p5js.org/ehersh/sketches/Hk52gNXR7]"游標顯示")
-[利用JS寫一個簡單的接金幣小遊戲]([https://blog.csdn.net/m0_54932975/article/details/123884199] "游標顯示")
+- [p5.js 接球小遊戲](https://editor.p5js.org/ehersh/sketches/Hk52gNXR7"游標顯示")  
+- [利用JS寫一個簡單的接金幣小遊戲](https://blog.csdn.net/m0_54932975/article/details/123884199 "游標顯示")
