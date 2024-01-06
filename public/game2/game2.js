@@ -25,14 +25,16 @@ let coins;
 let blackHands;
 
 //倒數時間
-let timeLeft = 10;
+let timeLeft = 30;
 
 //成功失敗不再賺錢
 let gamePause = false;
 
 //失敗需要重新開啟遊戲
 let showReturnButton = false;
-let lineHeight = 30; // 設定行距
+
+//前往下一關
+let nextGame = false;
 
 function preload() {
   gate2 = loadImage("../assets/Gate2/背景/Gate2背景(+物件).png");
@@ -73,7 +75,6 @@ function draw() {
     chooseDish();
   } else if (screen === 3) {
     gameOn();
-    drawSprites();
   } else if (screen === 4) {
     gameEnd();
   }
@@ -259,7 +260,6 @@ let dishInfo = [
 ];
 
 function chooseDish() {
-  // background(gate2bg);
   imageMode(CENTER);
 
   //背景圖
@@ -388,18 +388,27 @@ function gameOn() {
 
   //玩家
   player1.position.y = windowHeight / 2 + 150;
-
   //薪資袋
   envelope.position.y = windowHeight / 2 + 200;
 
   //鍵盤控制方向
   if (keyIsDown(LEFT_ARROW)) {
     // left
-    player1.setVelocity(-2, 0);
-    envelope.setVelocity(-2, 0);
+    if (player1.position.x < 70) {
+      player1.setVelocity(0, 0);
+      envelope.setVelocity(0, 0);
+    } else {
+      player1.setVelocity(-4, 0);
+      envelope.setVelocity(-4, 0);
+    }
   } else if (keyIsDown(RIGHT_ARROW)) {
-    player1.setVelocity(2, 0);
-    envelope.setVelocity(2, 0);
+    if (player1.position.x > windowWidth - 70) {
+      player1.setVelocity(0, 0);
+      envelope.setVelocity(0, 0);
+    } else {
+      player1.setVelocity(4, 0);
+      envelope.setVelocity(4, 0);
+    }
   } else {
     // no key press ‐> stand still
     player1.setVelocity(0, 0);
@@ -452,8 +461,8 @@ function gameOn() {
     for (let i = coins.length - 1; i >= 0; i--) {
       if (coins[i].overlap(envelope)) {
         //碰撞後薪水+10、移除金幣
-        //顯示加的分數在畫面
-        if (isGoldCoin) {
+        // 顯示加的分數在畫面
+        if (coins[i].isGoldCoin) {
           salary += 10; // 金幣加 10 分
           scoreDisplay = "+10";
           displayTimer = 60;
@@ -462,7 +471,6 @@ function gameOn() {
           scoreDisplay = "+5";
           displayTimer = 60;
         }
-        // salary += 10;
         coins[i].remove(); //刪除金幣圖片
         coins.splice(i, 1); //從群組刪掉金幣
       }
@@ -481,7 +489,7 @@ function gameOn() {
       }
     }
     // 顯示吃到的分數
-    if (scoreDisplay !== "" && displayTimer > 0) {
+    if (scoreDisplay !== "") {
       textAlign(CENTER);
       textSize(30);
 
@@ -508,15 +516,14 @@ function createCoin(x, y) {
 
   if (coinType === 0) {
     // 這是金幣
-    isGoldCoin = true;
     goldCoin = createSprite(x, y);
     goldCoin.addImage("gold", loadImage("../assets/Gate2/關卡/金色錢幣.png"));
     goldCoin.scale = 0.25;
     goldCoin.velocity.y = random(4, 6);
+    goldCoin.isGoldCoin = true;
     coins.add(goldCoin);
   } else {
     // 這是銀幣
-    isGoldCoin = false;
     silverCoin = createSprite(x, y);
     silverCoin.addImage(
       "silver",
@@ -524,7 +531,7 @@ function createCoin(x, y) {
     );
     silverCoin.scale = 0.25;
     silverCoin.velocity.y = random(2, 4);
-
+    silverCoin.isGoldCoin = false;
     coins.add(silverCoin);
   }
 }
@@ -554,7 +561,7 @@ function displayPerformanceText() {
     windowWidth / 2 - 85,
     windowHeight / 2 + 15,
     textWidth("檢視工作表現"),
-    30,
+    50,
     30
   );
   // 漸進增加透明度
@@ -565,7 +572,7 @@ function displayPerformanceText() {
   fill("white");
   textSize(20);
   textAlign(CENTER, CENTER);
-  text("檢視工作表現", width / 2, height / 2 + 30);
+  text("檢視工作表現", width / 2, height / 2 + 40);
 }
 
 //----------------------Screen3 End ----------------------------------------------------------
@@ -583,11 +590,15 @@ function gameEnd() {
     gate2bg.height / 5
   );
 
+  // 顯示再次上工的按鈕 (重玩)
+  showReturnButton = true;
+
   if (salary >= totalCost) {
+    nextGame = true;
     textAlign(CENTER);
     fill("black");
-    textSize(15);
-    textLeading(lineHeight);
+    textSize(18);
+    textLeading(35);
     text(
       "「原來我曾經這麼努力才能飽餐一頓啊！」\n" +
         "多數移工出國工作是為了改善家中的經濟狀況，\n" +
@@ -596,32 +607,57 @@ function gameEnd() {
         "存款已所剩無幾\n" +
         "想好好吃一餐為什麼這麼難呢？",
       width / 2,
-      height / 2 - 50
+      height / 2 - 120
     );
-  } else if (timeLeft <= 0) {
-    textAlign(CENTER);
-    fill("black");
-    textSize(20);
-    text("白忙一場！", width / 2, height / 2 - 50);
-    text("你賺得錢不夠支付你想吃的餐點！", width / 2, height / 2);
-  }
-  if (screen === 4) {
-    // 顯示再次上工的按鈕
-    showReturnButton = true;
-    fill(0, 0, 0, 180);
+
+    //TODO 前往下一關文字
+    //下一關文字、框
+    fill(0, 0, 0, alphaValue);
     noStroke();
     rect(
-      windowWidth / 2 - 72,
-      windowHeight / 2 + 150,
-      textWidth("再次上工") + 70,
+      windowWidth / 2 - 80,
+      windowHeight / 2 + 92,
+      textWidth("下一關") + 110,
       50,
       30
     );
 
     fill("white");
-    textSize(27);
+    textSize(28);
     textAlign(CENTER, CENTER);
-    text("再次上工", width / 2, height / 2 + 175);
+    text("下一關", width / 2, height / 2 + 120);
+
+    // 漸進增加透明度
+    if (alphaValue < 180) {
+      alphaValue += 5; // 調整此值以控制漸變速度
+    }
+  } else if (timeLeft <= 0) {
+    textAlign(CENTER);
+    fill("black");
+    textSize(20);
+    text("白忙一場！", width / 2, height / 2 - 40);
+    text("你賺得錢不夠支付你想吃的餐點！", width / 2, height / 2);
+
+    //再次上工文字、框
+    fill(0, 0, 0, alphaValue);
+    noStroke();
+    rect(
+      windowWidth / 2 - 80,
+      windowHeight / 2 + 92,
+      textWidth("再次上工") + 80,
+      50,
+      30
+    );
+
+    fill("white");
+    textSize(28);
+    textAlign(CENTER, CENTER);
+    text("再次上工", width / 2, height / 2 + 120);
+
+    // 漸進增加透明度
+    if (alphaValue < 180) {
+      alphaValue += 5; // 調整此值以控制漸變速度
+    }
   }
 }
 
@@ -630,7 +666,6 @@ function gameEnd() {
 //----------------------Screen切換與其他 --------------------------------------------
 //點擊滑鼠進行畫面轉換
 function mousePressed() {
-  console.log("Current screen:", screen); // 添加这行调试输出
   // 遊戲說明點擊
   //TODO 點擊說明info小圖繪出現遊戲說明
 
@@ -643,8 +678,9 @@ function mousePressed() {
   let screen2StartY = windowHeight / 2 + 192;
 
   // Step4 再次上工的方框位置
-  let screen4StartX = windowWidth / 2 - 70;
-  let screen4StartY = windowHeight / 2 + 150;
+
+  let screen4StartX = windowWidth / 2 - 80;
+  let screen4StartY = windowHeight / 2 + 92;
 
   if (
     //Step0 Game2 起始畫面
@@ -672,18 +708,20 @@ function mousePressed() {
       decreaseButtons[i].hide();
     }
     screen = 3;
-  }
-  if (screen === 3 && gamePause) {
+  } else if (screen === 3 && gamePause) {
     screen = 4;
   } else if (
-    // Step4 再次上工按钮
     screen === 4 &&
     mouseX > screen4StartX &&
-    mouseX < screen4StartX + textWidth("再次上工") + 70 &&
+    mouseX < screen4StartX + textWidth("下一關") + 110 &&
     mouseY > screen4StartY &&
     mouseY < screen4StartY + 50
   ) {
-    screen = 0;
+    if (nextGame) {
+      console.log("next");
+    } else {
+      screen = 0;
+    }
   }
 }
 
@@ -691,11 +729,16 @@ function reset() {
   //分數歸零重新開始
   screen = 0;
   salary = 0;
-  timeLeft = 10;
+  timeLeft = 30;
+  scoreDisplay = "";
+  //餐點數量歸零
   dishInfo.forEach((item) => {
     item.count = 0;
   });
   gamePause = false;
+
+  player1.position.x = width / 2;
+  envelope.position.x = width / 2;
 }
 
 //讓圖片符合螢幕尺寸
