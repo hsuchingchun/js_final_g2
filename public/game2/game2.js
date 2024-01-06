@@ -253,10 +253,10 @@ let buttonSpacing = 188; // 按鈕間距
 
 // 每個按鈕的餐點價格和數量的陣列
 let dishInfo = [
-  { price: 100, count: 0 },
+  { price: 50, count: 0 },
   { price: 60, count: 0 },
   { price: 80, count: 0 },
-  { price: 50, count: 0 },
+  { price: 100, count: 0 },
 ];
 
 function chooseDish() {
@@ -678,7 +678,6 @@ function mousePressed() {
   let screen2StartY = windowHeight / 2 + 192;
 
   // Step4 再次上工的方框位置
-
   let screen4StartX = windowWidth / 2 - 80;
   let screen4StartY = windowHeight / 2 + 92;
 
