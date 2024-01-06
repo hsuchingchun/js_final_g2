@@ -21,7 +21,7 @@
   玩家須在30秒內賺到符合所選伙食費，而可破關
 - **screen4 → gameEnd()**  
   成功破關會呈現故事，可接續下一關  
-  失敗了需重來破關
+  失敗了需重來破關，進入screen0
 
 ### 參考程式碼
 - [p5.js 接球小遊戲](https://editor.p5js.org/ehersh/sketches/Hk52gNXR7"游標顯示")  
