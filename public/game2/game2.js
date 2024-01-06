@@ -272,7 +272,7 @@ function chooseDish() {
   );
 
   //遊戲說明
-  image(info, 50, 50, info.width / 5, info.height / 5);
+  // image(info, 50, 50, info.width / 5, info.height / 5);
 
   //菜單標題
   image(
