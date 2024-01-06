@@ -718,7 +718,7 @@ function mousePressed() {
     mouseY < screen4StartY + 50
   ) {
     if (nextGame) {
-      console.log("next");
+      // console.log("next");
     } else {
       screen = 0;
     }
