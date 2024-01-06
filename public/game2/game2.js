@@ -12,6 +12,10 @@ let player1Intro;
 let player1;
 let envelope;
 
+// 顯示吃到的分數文字和停留秒數
+let scoreDisplay = "";
+let displayTimer = 0;
+
 //計算分數
 let salary = 0;
 let totalCost; //總伙食費加總
@@ -21,7 +25,14 @@ let coins;
 let blackHands;
 
 //倒數時間
-let timeLeft = 30;
+let timeLeft = 10;
+
+//成功失敗不再賺錢
+let gamePause = false;
+
+//失敗需要重新開啟遊戲
+let showReturnButton = false;
+let lineHeight = 30; // 設定行距
 
 function preload() {
   gate2 = loadImage("../assets/Gate2/背景/Gate2背景(+物件).png");
@@ -56,19 +67,18 @@ function draw() {
   //螢幕場景切換
   if (screen === 0) {
     startScreen();
-    // chooseDish();
-    // gameOn();
   } else if (screen === 1) {
     intro();
   } else if (screen === 2) {
     chooseDish();
   } else if (screen === 3) {
     gameOn();
+    drawSprites();
+  } else if (screen === 4) {
+    gameEnd();
   }
-  // } else if (screen === 4) {
-  //   gameEnd();
-  // }
 }
+
 //---------------------- 畫面內容 function ---------------------------------------------------------------
 
 //----------------------Screen0 遊戲開始前 startScreen() ----------------------------------------------
@@ -84,18 +94,15 @@ let allTextDisplayed = false; // 是否所有文字都已經打印完畢
 let alphaValue = 0;
 
 function startScreen() {
+  reset();
   let introText = [
     "「我想要到台灣努力工作，賺錢以後要幫忙家裡。」",
     "看著每個月的薪資都拿去還高額的仲介費債務與服務費抽成",
-    "薪水還需要寄回家鄉",
-    "因此即使每天努力工作仍賺不了錢",
+    "我的薪水還需要寄回家鄉",
+    "就算我現在每天努力工作仍賺不了錢",
     "為什麼想在台灣過生活這麼難呢？",
   ];
-
-  // background(gate2bg);
-
   imageMode(CENTER);
-
   //背景圖
   image(
     gate2bg,
@@ -168,7 +175,7 @@ function startScreen() {
     fill(0, 0, 0, alphaValue);
     noStroke();
     rect(
-      windowWidth / 2 - 55,
+      windowWidth / 2 - 60,
       windowHeight / 2 + 150,
       textWidth("START") + 70,
       50,
@@ -182,7 +189,7 @@ function startScreen() {
     fill("white");
     textSize(32);
     textAlign(CENTER, CENTER);
-    text("START", width / 2, height / 2 + 180);
+    text("START", windowWidth / 2 - 5, windowHeight / 2 + 180);
   }
 
   reset();
@@ -285,6 +292,13 @@ function chooseDish() {
     allDish.height / 5.5
   );
 
+  //如果再次開啟遊戲的話需要按鈕顯示
+  if (showReturnButton === true) {
+    for (let i = 0; i < buttonCount; i++) {
+      increaseButtons[i].show();
+      decreaseButtons[i].show();
+    }
+  }
   //畫出四組按鈕
   for (let i = 0; i < buttonCount; i++) {
     // 創建減號按鈕
@@ -361,7 +375,6 @@ function decreaseValue(index) {
 //----------------------Screen2 End ----------------------------------------------------------
 
 //----------------------Screen3 遊戲開始 gameOn()------------------------------------------
-//TODO 貼上 gameOn.js
 function gameOn() {
   imageMode(CENTER);
   //背景圖
@@ -410,29 +423,28 @@ function gameOn() {
     fill("black");
     textSize(28);
     text("成功了！", width / 2, height / 2 - 50);
-    text("「原來我曾經這麼努力才能飽餐一頓啊！」", width / 2, height / 2);
-
-    noLoop();
+    gamePause = true;
+    displayPerformanceText();
   } else if (timeLeft <= 0) {
     textAlign(CENTER);
     fill("black");
     textSize(28);
     text("失敗了！", width / 2, height / 2 - 50);
-    text("你賺得錢不夠支付你想吃的餐點！", width / 2, height / 2);
 
-    noLoop();
+    gamePause = true;
+    displayPerformanceText();
   } else {
     // 更新時間
     if (frameCount % 60 === 0) {
       timeLeft--;
     }
     //金幣掉落
-    if (frameCount % 30 === 0) {
+    if (frameCount % 30 === 0 && screen !== 4) {
       createCoin(random(width), -50); // 從隨機x座標位置掉落金幣，y座標設為-50，從畫布頂端開始掉落
     }
 
     //黑手掉落
-    if (frameCount % 90 === 0) {
+    if (frameCount % 90 === 0 && screen !== 4) {
       createBlackHand(random(width), -50);
     }
 
@@ -440,8 +452,17 @@ function gameOn() {
     for (let i = coins.length - 1; i >= 0; i--) {
       if (coins[i].overlap(envelope)) {
         //碰撞後薪水+10、移除金幣
-        //TODO 顯示加的分數在畫面
-        salary += 10;
+        //顯示加的分數在畫面
+        if (isGoldCoin) {
+          salary += 10; // 金幣加 10 分
+          scoreDisplay = "+10";
+          displayTimer = 60;
+        } else {
+          salary += 5; // 銀幣加 5 分
+          scoreDisplay = "+5";
+          displayTimer = 60;
+        }
+        // salary += 10;
         coins[i].remove(); //刪除金幣圖片
         coins.splice(i, 1); //從群組刪掉金幣
       }
@@ -450,27 +471,62 @@ function gameOn() {
     //偵測黑手抽成、信封碰撞
     for (let i = blackHands.length - 1; i >= 0; i--) {
       if (blackHands[i].overlap(envelope)) {
-        //碰撞後薪水+10、移除金幣
-        //TODO 顯示加的分數在畫面
+        //碰撞後薪水-10
+        //顯示加的分數在畫面
         salary -= 10;
+        scoreDisplay = "-10 加油好嗎";
+        displayTimer = 60;
         blackHands[i].remove();
         blackHands.splice(i, 1);
       }
     }
+    // 顯示吃到的分數
+    if (scoreDisplay !== "" && displayTimer > 0) {
+      textAlign(CENTER);
+      textSize(30);
 
+      //換字顏色
+      if (scoreDisplay === "-10 加油好嗎") {
+        fill("red");
+      } else {
+        fill(241, 247, 64);
+      }
+      text(scoreDisplay, windowWidth / 2, windowHeight / 2);
+
+      displayTimer--;
+    }
     drawSprites();
   }
 }
 
-//TODO 畫銀幣
 //畫出金幣
 function createCoin(x, y) {
-  let coin = createSprite(x, y);
-  //TODO random 出現金或銀
-  coin.addImage("gold", loadImage("../assets/Gate2/關卡/金色錢幣.png"));
-  coin.scale = 0.25;
-  coin.velocity.y = 2; // 金幣向下掉落速度
-  coins.add(coin);
+  //random 出現金或銀，0 或 1，決定是金幣還是銀幣
+  let coinType = floor(random(2));
+  let goldCoin;
+  let silverCoin;
+
+  if (coinType === 0) {
+    // 這是金幣
+    isGoldCoin = true;
+    goldCoin = createSprite(x, y);
+    goldCoin.addImage("gold", loadImage("../assets/Gate2/關卡/金色錢幣.png"));
+    goldCoin.scale = 0.25;
+    goldCoin.velocity.y = random(4, 6);
+    coins.add(goldCoin);
+  } else {
+    // 這是銀幣
+    isGoldCoin = false;
+    silverCoin = createSprite(x, y);
+    silverCoin.addImage(
+      "silver",
+      loadImage("../assets/Gate2/關卡/銀色錢幣.png")
+    );
+    silverCoin.scale = 0.25;
+    silverCoin.velocity.y = random(2, 4);
+
+    coins.add(silverCoin);
+  }
 }
 
 //畫出黑手
@@ -482,16 +538,91 @@ function createBlackHand(x, y) {
   blackHands.add(hand);
 }
 
+//畫出工作表現文字
+function displayPerformanceText() {
+  //移除畫面錢幣、黑手
+  for (let i = coins.length - 1; i >= 0; i--) {
+    coins[i].remove();
+  }
+  for (let i = blackHands.length - 1; i >= 0; i--) {
+    blackHands[i].remove();
+  }
+  //畫出文字
+  fill(0, 0, 0, alphaValue);
+  noStroke();
+  rect(
+    windowWidth / 2 - 85,
+    windowHeight / 2 + 15,
+    textWidth("檢視工作表現"),
+    30,
+    30
+  );
+  // 漸進增加透明度
+  if (alphaValue < 180) {
+    alphaValue += 5; // 調整此值以控制漸變速度
+  }
+
+  fill("white");
+  textSize(20);
+  textAlign(CENTER, CENTER);
+  text("檢視工作表現", width / 2, height / 2 + 30);
+}
+
 //----------------------Screen3 End ----------------------------------------------------------
 
 //----------------------Screen4 遊戲結束 gameEnd() --------------------------------------------
 
 function gameEnd() {
-  // background(150);
-  // textAlign(CENTER);
-  // text("GAME OVER", width / 2, height / 2);
-  // text("SCORE = " + score, width / 2, height / 2 + 20);
-  // text("click to play again", width / 2, height / 2 + 40);
+  imageMode(CENTER);
+  //背景圖
+  image(
+    gate2bg,
+    windowWidth / 2,
+    windowHeight / 2,
+    windowWidth * 1.06,
+    gate2bg.height / 5
+  );
+
+  if (salary >= totalCost) {
+    textAlign(CENTER);
+    fill("black");
+    textSize(15);
+    textLeading(lineHeight);
+    text(
+      "「原來我曾經這麼努力才能飽餐一頓啊！」\n" +
+        "多數移工出國工作是為了改善家中的經濟狀況，\n" +
+        "但每月基本薪資扣除了\n" +
+        "高額貸款利息、仲介服務費、保險費、生活基本開銷等\n" +
+        "存款已所剩無幾\n" +
+        "想好好吃一餐為什麼這麼難呢？",
+      width / 2,
+      height / 2 - 50
+    );
+  } else if (timeLeft <= 0) {
+    textAlign(CENTER);
+    fill("black");
+    textSize(20);
+    text("白忙一場！", width / 2, height / 2 - 50);
+    text("你賺得錢不夠支付你想吃的餐點！", width / 2, height / 2);
+  }
+  if (screen === 4) {
+    // 顯示再次上工的按鈕
+    showReturnButton = true;
+    fill(0, 0, 0, 180);
+    noStroke();
+    rect(
+      windowWidth / 2 - 72,
+      windowHeight / 2 + 150,
+      textWidth("再次上工") + 70,
+      50,
+      30
+    );
+
+    fill("white");
+    textSize(27);
+    textAlign(CENTER, CENTER);
+    text("再次上工", width / 2, height / 2 + 175);
+  }
 }
 
 //----------------------Screen4 End ----------------------------------------------------------
@@ -499,6 +630,7 @@ function gameEnd() {
 //----------------------Screen切換與其他 --------------------------------------------
 //點擊滑鼠進行畫面轉換
 function mousePressed() {
+  console.log("Current screen:", screen); // 添加这行调试输出
   // 遊戲說明點擊
   //TODO 點擊說明info小圖繪出現遊戲說明
 
@@ -506,9 +638,13 @@ function mousePressed() {
   let screen0StartX = windowWidth / 2 - 55;
   let screen0StartY = windowHeight / 2 + 150;
 
-  //Step2 開始賺錢的方框位置
+  // Step2 開始賺錢的方框位置
   let screen2StartX = windowWidth / 2 - 80;
   let screen2StartY = windowHeight / 2 + 192;
+
+  // Step4 再次上工的方框位置
+  let screen4StartX = windowWidth / 2 - 70;
+  let screen4StartY = windowHeight / 2 + 150;
 
   if (
     //Step0 Game2 起始畫面
@@ -522,11 +658,6 @@ function mousePressed() {
   } else if (screen === 1) {
     //Step1 遊戲說明畫面
     screen = 2;
-    //TODO 按鈕出現
-    // for (let i = 0; i < buttonCount; i++) {
-    //   increaseButtons[i].show();
-    //   decreaseButtons[i].show();
-    // }
   } else if (
     //Step2 選餐畫面開始，點選開始賺錢切畫面
     screen === 2 &&
@@ -536,20 +667,35 @@ function mousePressed() {
     mouseY < screen2StartY + 50 &&
     totalCost > 0
   ) {
-    //選完餐點之後，隱藏按鈕，進入遊戲開始關卡
-    //切換畫面
-    screen = 3;
-    //隱藏按鈕
     for (let i = 0; i < buttonCount; i++) {
       increaseButtons[i].hide();
       decreaseButtons[i].hide();
     }
+    screen = 3;
+  }
+  if (screen === 3 && gamePause) {
+    screen = 4;
+  } else if (
+    // Step4 再次上工按钮
+    screen === 4 &&
+    mouseX > screen4StartX &&
+    mouseX < screen4StartX + textWidth("再次上工") + 70 &&
+    mouseY > screen4StartY &&
+    mouseY < screen4StartY + 50
+  ) {
+    screen = 0;
   }
 }
 
 function reset() {
-  //TODO 分數歸零
-  totalCost = 0;
+  //分數歸零重新開始
+  screen = 0;
+  salary = 0;
+  timeLeft = 10;
+  dishInfo.forEach((item) => {
+    item.count = 0;
+  });
+  gamePause = false;
 }
 
 //讓圖片符合螢幕尺寸
