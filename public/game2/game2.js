@@ -118,7 +118,7 @@ function startScreen() {
   textStyle(BOLD);
   textSize(32);
   stroke("white");
-  text("GAME 2", windowWidth / 2, windowHeight / 2 - 180);
+  text("Gate 2", windowWidth / 2, windowHeight / 2 - 180);
 
   //印出故事文字動畫
   textStyle(NORMAL);
@@ -352,7 +352,7 @@ function chooseDish() {
   );
 
   fill("white");
-  textSize(32);
+  textSize(28);
   textAlign(CENTER, CENTER);
   text("開始賺錢", width / 2, height / 2 + 220);
 }
@@ -423,8 +423,8 @@ function gameOn() {
   textAlign(LEFT);
   fill("white");
   textSize(26);
-  text(`伙食費：${totalCost}`, 50, windowHeight / 2 + 95);
-  text(`目前薪資：${salary}`, 50, windowHeight / 2 + 140);
+  text(`伙食費：${totalCost}`, 30, windowHeight / 2 + 95);
+  text(`目前薪資：${salary}`, 30, windowHeight / 2 + 140);
 
   // 判斷遊戲是否結束
   if (salary >= totalCost) {
